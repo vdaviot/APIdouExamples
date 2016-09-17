@@ -1,5 +1,6 @@
 import pygatt.backends
 import struct
+import test
 
 class APIdou():
 	"""
@@ -37,6 +38,14 @@ class APIdou():
 		self.gyro = 3 * [0]
 		self.touch = 0
 		self.hci = hci_device
+
+	# global signal = [LEFT_FOOT, RIGHT_FOOT, LEFT_HAND, RIGHT_HAND, LEFT_EAR, RIGHT_EAR, ANTENNA]
+	# def handle_signal():
+	# 	if self.touch == ANTENNA:
+	# 		music.play(ANTENNA)
+		if self.touch == 123 or self.touch >= 83:
+			music.play(signal)
+
 
 	@staticmethod
 	def scan(backend, timeout=5):

@@ -2,14 +2,107 @@ import logging
 import sys
 import time
 import argparse
+from subprocess import call
+from test import *
 from apidou import *
 from pdsend import *
 from comsend import *
 import pygatt.backends
+import os, time, pygame, pyglet
+from multiprocessing import Pool
 
 compt = 0
 start_time = 0
 apidou = ''
+volume = 50
+number = 0
+file_list = []
+
+
+
+# def get_bpm(touched):
+# 	count = 0
+# 	count = record(touched, count)
+# 	# print "BPM:{}".format(bpm)
+# 	return translate_bpm(count)
+
+# def	record(touched, count):
+# 	t = time.time()
+# 	status = True
+# 	while status == True:
+# 		t2 = time.time()
+# 		if touched:
+# 			count += 1
+# 		if t2 >= t + 2:
+# 			status = False
+# 	return count
+
+# def	translate_bpm(count):
+# 	bpm = count * 30
+# 	return bpm
+
+def	action(what, number, volume):
+	if what == apidou.LEFT_EAR:
+		set_volume(volume, 1)
+	elif what == apidou.RIGHT_EAR:
+		set_volume(volume, 0)
+	elif what == apidou.RIGHT_HAND:
+		switch_track(1, number)
+	elif what == apidou.LEFT_HAND:
+		if number > 0:
+			number -= 1
+		switch_track(0, number)
+	elif what == apidou.ANTENNA:
+		play_track(number)
+	# if bpm:
+		# index = find_song(bpm)
+		# play_track(index)
+
+def	play_track(nb):
+	pygame.mixer.music.load(file_list[nb])
+	pygame.mixer.music.play(1)
+
+def switch_track(bool, number):
+	if bool == 1:
+		if file_list[number]:
+			pygame.mixer.music.load(file_list[number])
+			play_track(number)
+	else:
+		if number > 0:
+			if file_list[number]:
+				pygame.mixer.music.load(file_list[number])
+				play_track(number)
+
+def	set_volume(volume, bool):
+	valid = False
+	print volume
+	if bool == 1:
+		volume = volume +  5
+	elif bool == 0:
+		volume -= 5
+	while not valid:
+	    try:
+	        if (volume <= 100) and (volume >= 0):
+	            call(["amixer", "-D", "pulse", "sset", "Master", str(volume)+"%"])
+	            valid = True
+	    except ValueError:
+	        pass
+
+def	init_music():
+	pygame.init()
+	pygame.mixer.init()
+	folder = os.listdir("/home/shayn/Work/APIdouExamples/music")
+	for track in folder:
+		file_list.append(track)
+		print track
+
+def	do_all_the_shit(touch):
+	# init_music()
+	# while True:x`z
+	# bpm = get_bpm(apidou.touch)
+	bpm = 0
+	action(touch, number, volume)
+
 
 def APIdouCallback(handle, value):
 	global apidou
@@ -78,12 +171,14 @@ def main():
 		# apidou.setNotifyGyro(True)
 		apidou.setNotifyTouch(True)
 		print "Connected"
+		init_music()
 		while True:
 			if apidou.isTouched(APIdou.ANTENNA):
 				print "The antenna is touched"
 			# print "Accel: ", apidou.accel
 			# print "Gyro: ", apidou.gyro
-			# print "touch: ", apidou.touch
+			do_all_the_shit(apidou.touch)
+			print "touch: ", apidou.touch
 			if args.tcp or args.com:
 				handleOutput(apidou, output, args.tcp)
 			time.sleep(0.01)
